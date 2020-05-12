@@ -46,12 +46,15 @@ from example_model import CPPNModel
 # supported configs. The setup function should return the model ready to be
 # used.
 
-res = 64
+
 setup_options = {
     'mode': text(default='tanh'),
     'seed': number(min=0, max=1000000, default=5, description='A seed used to initialize the model.'),
     'resolution': number(min=32, max=1024, default=64, description='output image size')
 }
+
+res = 64
+
 @runway.setup(options=setup_options)
 def setup(opts):
     msg = '[SETUP] Ran with options: mode = {}, seed = {}, res = {}'
@@ -64,27 +67,23 @@ def setup(opts):
 # Every model needs to have at least one command. Every command allows to send
 # inputs and process outputs. To see a complete list of supported inputs and
 # outputs data types: https://sdk.runwayml.com/en/latest/data_types.html
-sample_inputs = {'z': vector(length=3)}
+# sample_inputs = {'z': vector(length=3)}
+sample_inputs = {'z1': number(min=-5., max=5., step=0.01, default=.125),
+                 'z2': number(min=-5., max=5., step=0.01, default=2.125),
+                 'scale': number(min=0.01, max=10, step=0.01, default=1.500)}
 sample_outputs = {'image': image(width=res, height=res)}
+
 
 @runway.command(name='generate', inputs=sample_inputs, outputs=sample_outputs,)
 def generate(model, inputs):
     # print('[GENERATE] Ran with caption value "{}"'.format(args['caption']))
     # Generate a PIL or Numpy image based on the input caption, and return it
-    output_image = model.run_on_input(inputs)
-    return {
-        'image': output_image
-    }
+    output_image = model.run_on_input([inputs['z1'], inputs['z2'], inputs['scale']])
+    return {'image': output_image}
 
 
 if __name__ == '__main__':
     # run the model server using the default network interface and ports,
     # displayed here for convenience
-    runway.run(host='0.0.0.0', port=8001)
+    runway.run(host='0.0.0.0', port=8000)
 
-## Now that the model is running, open a new terminal and give it a command to
-## generate an image. It will respond with a base64 encoded URI
-# curl \
-#   -H "content-type: application/json" \
-#   -d '{ "caption": "red" }' \
-#   localhost:8000/generate
