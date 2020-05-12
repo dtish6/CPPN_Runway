@@ -25,6 +25,7 @@ from PIL import Image
 import tensorflow as tf
 import numpy as np
 
+
 class CPPNModel():
 
     def __init__(self, options):
