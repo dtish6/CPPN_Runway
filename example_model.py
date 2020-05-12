@@ -26,17 +26,17 @@ import tensorflow as tf
 import numpy as np
 
 
-class CPPNModel():
+class CPPNModel:
 
     def __init__(self, options):
         self.seed = options['seed']
         self.mode = options['mode']
+        self.res = options['resolution']
 
     def init_model_tanh(self):
         model = tf.keras.Sequential()
         init = tf.keras.initializers.VarianceScaling(scale=10, mode='fan_in', seed=self.seed)
-        model.add(
-            tf.keras.layers.Dense(32, activation="tanh", input_shape=(5,), kernel_initializer=init, use_bias=False))
+        model.add(tf.keras.layers.Dense(32, activation="tanh", input_shape=(5,), kernel_initializer=init, use_bias=False))
         model.add(tf.keras.layers.Dense(32, activation="tanh", kernel_initializer=init, use_bias=False))
         model.add(tf.keras.layers.Dense(32, activation="tanh", kernel_initializer=init, use_bias=False))
         # model.add(layers.Dense(32, activation="tanh", kernel_initializer=init,use_bias=False))
@@ -46,8 +46,7 @@ class CPPNModel():
     def init_model_softplus(self):
         model = tf.keras.Sequential()
         init = tf.keras.initializers.VarianceScaling(scale=10, mode='fan_in', seed=self.seed)
-        model.add(
-            tf.keras.layers.Dense(32, activation="tanh", input_shape=(5,), kernel_initializer=init, use_bias=False))
+        model.add(tf.keras.layers.Dense(32, activation="tanh", input_shape=(5,), kernel_initializer=init, use_bias=False))
         model.add(tf.keras.layers.Dense(32, activation="softplus", kernel_initializer=init, use_bias=False))
         model.add(tf.keras.layers.Dense(32, activation="tanh", kernel_initializer=init, use_bias=False))
         model.add(tf.keras.layers.Dense(32, activation="softplus", kernel_initializer=init, use_bias=False))
@@ -59,7 +58,7 @@ class CPPNModel():
         X, Y = np.meshgrid(x, x)
         return np.vstack([X.flatten(), Y.flatten()]).T
 
-    def generateIm(self, model, z=[0., 0.], resolution=64, scale=1.0):
+    def generateIm(self, model, z=[0, 0], resolution=64, scale=1.0):
         pixels = self.pixelGrid(resolution) * scale
         input = np.hstack(
             [pixels, np.linalg.norm(pixels, axis=1).reshape(-1, 1), np.repeat([z], resolution ** 2, axis=0) * scale])
@@ -78,18 +77,17 @@ class CPPNModel():
             model = self.init_model_tanh()
         elif self.mode == 'softplus':
             model = self.init_model_softplus()
+        else:
+            print("Provide either 'tanh' or 'softplus' as the mode")
+            return None
 
         z1,z2,scale = input_vec
-        res = 64
+        RGB = np.zeros((self.res, self.res, 3), dtype=float)
 
-        RGB = np.zeros((res, res, 3), dtype=float)
-
-        im1 = self.generateIm(model, z=[z1, z2], scale=scale, resolution=res)
+        im1 = self.generateIm(model, z=[z1, z2], scale=scale, resolution=self.res)
         RGB[..., 0] = im1
         RGB[..., 1] = im1
         RGB[..., 2] = im1
-
-        RGB = np.array(RGB)
 
         return Image.fromarray(np.uint8(RGB*255))
 

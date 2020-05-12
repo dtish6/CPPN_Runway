@@ -45,14 +45,18 @@ from example_model import CPPNModel
 # Check https://docs.runwayapp.ai/#/python-sdk to see a complete list of
 # supported configs. The setup function should return the model ready to be
 # used.
+
+res = 64
 setup_options = {
     'mode': text(default='tanh'),
-    'seed': number(min=0, max=1000000, default=5, description='A seed used to initialize the model.')
+    'seed': number(min=0, max=1000000, default=5, description='A seed used to initialize the model.'),
+    'resolution': number(min=32, max=1024, default=64, description='output image size')
 }
 @runway.setup(options=setup_options)
 def setup(opts):
     msg = '[SETUP] Ran with options: seed = {}, truncation = {}'
-    print(msg.format(opts['mode'], opts['seed']))
+    print(msg.format(opts['mode'], opts['seed'], opts['resolution']))
+    res = opts['resolution']
     model = CPPNModel(opts)
     return model
 
@@ -63,15 +67,16 @@ def setup(opts):
                 inputs={ 'z1': number(min=-3, max=3, step=0.001, default=0.125),
                          'z2': number(min=-3, max=3, step=0.001, default=0.125),
                          'scale': number(min=0, max=10, step=0.01, default=2.50)},
-                outputs={ 'image': image(width=512, height=512) },
-                description='Generates a red square when the input text input is "red".')
+                outputs={ 'image': image(width=res, height=res)},
+                description='Generates a new image based on the CPPN architecture')
 def generate(model, args):
-    print('[GENERATE] Ran with caption value "{}"'.format(args['caption']))
+    # print('[GENERATE] Ran with caption value "{}"'.format(args['caption']))
     # Generate a PIL or Numpy image based on the input caption, and return it
     output_image = model.run_on_input(args['z1','z2','scale'])
     return {
         'image': output_image
     }
+
 
 if __name__ == '__main__':
     # run the model server using the default network interface and ports,
