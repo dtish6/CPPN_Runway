@@ -37,7 +37,7 @@
 # Import the Runway SDK. Please install it first with
 # `pip install runway-python`.
 import runway
-from runway.data_types import number, text, image
+from runway.data_types import number, text, image, vector
 from example_model import CPPNModel
 
 # Setup the model, initialize weights, set the configs of the model, etc.
@@ -54,25 +54,24 @@ setup_options = {
 }
 @runway.setup(options=setup_options)
 def setup(opts):
-    msg = '[SETUP] Ran with options: seed = {}, truncation = {}'
+    msg = '[SETUP] Ran with options: mode = {}, seed = {}, res = {}'
     print(msg.format(opts['mode'], opts['seed'], opts['resolution']))
     res = opts['resolution']
     model = CPPNModel(opts)
     return model
 
+
 # Every model needs to have at least one command. Every command allows to send
 # inputs and process outputs. To see a complete list of supported inputs and
 # outputs data types: https://sdk.runwayml.com/en/latest/data_types.html
-@runway.command(name='generate',
-                inputs={ 'z1': number(min=-3, max=3, step=0.001, default=0.125),
-                         'z2': number(min=-3, max=3, step=0.001, default=0.125),
-                         'scale': number(min=0, max=10, step=0.01, default=2.50)},
-                outputs={ 'image': image(width=res, height=res)},
-                description='Generates a new image based on the CPPN architecture')
-def generate(model, args):
+sample_inputs = {'z': vector(length=3)}
+sample_outputs = {'image': image(width=res, height=res)}
+
+@runway.command(name='generate', inputs=sample_inputs, outputs=sample_outputs,)
+def generate(model, inputs):
     # print('[GENERATE] Ran with caption value "{}"'.format(args['caption']))
     # Generate a PIL or Numpy image based on the input caption, and return it
-    output_image = model.run_on_input(args['z1','z2','scale'])
+    output_image = model.run_on_input(inputs)
     return {
         'image': output_image
     }
